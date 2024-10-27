@@ -1,8 +1,9 @@
 #![forbid(unsafe_code)]
 
 use axum::extract::State;
+use axum::response::Html;
 use axum::{extract::Query, routing::get, Router};
-use db::Database;
+use db::{Database, SensorValue};
 use jiff::{RoundMode, Timestamp, TimestampRound, Unit};
 use serde::Deserialize;
 use std::env;
@@ -27,6 +28,7 @@ async fn main() -> anyhow::Result<()> {
 
     let app = Router::new()
         .route("/co2-ampel", get(receive_sensor_values))
+        .route("/", get(index))
         .with_state(database);
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
@@ -68,23 +70,28 @@ async fn receive_sensor_values(
     let sensor_id = if let Some(id) = sensor_id {
         id
     } else {
-        db::insert_sensor(&mut *conn, &params.id, &now)
+        db::insert_sensor(&mut *conn, &params.id, now)
             .await
             .unwrap()
     };
-    db::insert_sensor_value(
-        &mut *conn,
-        sensor_id,
-        params.co2,
-        params.temperature,
-        params.humidity,
-        params.lumen,
-        &now,
-    )
-    .await
-    .unwrap();
+    let value = SensorValue {
+        co2: params.co2,
+        temperature: params.temperature,
+        humidity: params.humidity,
+        lumen: params.lumen,
+        reading_time: now,
+    };
+    db::insert_sensor_value(&mut *conn, sensor_id, value)
+        .await
+        .unwrap();
     tracing::debug!("sensor ID: {sensor_id}");
     "done"
+}
+
+async fn index(State(database): State<Database>) -> Html<String> {
+    let mut conn = database.get_connection().await.unwrap();
+    let sensors = db::get_sensors_with_last_value(&mut *conn).await.unwrap();
+    Html(format!("<html><h1>Hello</h1><p>{sensors:?}</html>"))
 }
 
 fn current_time_millis() -> Timestamp {

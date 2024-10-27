@@ -1,7 +1,7 @@
 use jiff::Timestamp;
 use sqlx::pool::PoolConnection;
-use sqlx::sqlite::{SqliteConnectOptions, SqlitePool, SqlitePoolOptions};
-use sqlx::{ConnectOptions, Sqlite, SqliteConnection};
+use sqlx::sqlite::{SqliteConnectOptions, SqlitePool, SqlitePoolOptions, SqliteRow};
+use sqlx::{ConnectOptions, FromRow, Row, Sqlite, SqliteConnection};
 use std::str::FromStr;
 
 #[derive(Clone)]
@@ -51,7 +51,7 @@ pub async fn find_sensor_id(
 pub async fn insert_sensor(
     conn: &mut SqliteConnection,
     mac_address: &str,
-    first_seen: &Timestamp,
+    first_seen: Timestamp,
 ) -> anyhow::Result<i64> {
     let id = sqlx::query(
         r#"
@@ -70,11 +70,7 @@ pub async fn insert_sensor(
 pub async fn insert_sensor_value(
     conn: &mut SqliteConnection,
     sensor_id: i64,
-    co2: f32,
-    temperature: f32,
-    humidity: f32,
-    lumen: f32,
-    reading_time: &Timestamp,
+    value: SensorValue,
 ) -> anyhow::Result<i64> {
     let id = sqlx::query(
         r#"
@@ -83,13 +79,59 @@ pub async fn insert_sensor_value(
         "#,
     )
     .bind(sensor_id)
-    .bind(co2)
-    .bind(temperature)
-    .bind(humidity)
-    .bind(lumen)
-    .bind(reading_time.to_string())
+    .bind(value.co2)
+    .bind(value.temperature)
+    .bind(value.humidity)
+    .bind(value.lumen)
+    .bind(value.reading_time.to_string())
     .execute(conn)
     .await?
     .last_insert_rowid();
     Ok(id)
+}
+
+pub async fn get_sensors_with_last_value(
+    conn: &mut SqliteConnection,
+) -> anyhow::Result<Vec<SensorWithValue>> {
+    let sensors = sqlx::query_as(r#"
+        SELECT s.id, s.name, s.mac_address, v.co2, v.temperature, v.humidity, v.lumen, v.reading_time
+        FROM sensor s
+        JOIN sensor_data v on (s.id = v.sensor_id)
+        WHERE v.reading_time = (SELECT max(d.reading_time) FROM sensor_data d WHERE d.sensor_id = s.id)
+        ORDER by s.name
+    "#)
+    .fetch_all(conn)
+    .await?;
+    Ok(sensors)
+}
+
+#[derive(Debug)]
+pub struct SensorValue {
+    pub co2: f32,
+    pub temperature: f32,
+    pub humidity: f32,
+    pub lumen: f32,
+    pub reading_time: Timestamp,
+}
+
+impl FromRow<'_, SqliteRow> for SensorValue {
+    fn from_row(row: &SqliteRow) -> Result<Self, sqlx::Error> {
+        let reading_time: String = row.try_get("reading_time")?;
+        Ok(Self {
+            co2: row.try_get("co2")?,
+            temperature: row.try_get("temperature")?,
+            humidity: row.try_get("humidity")?,
+            lumen: row.try_get("lumen")?,
+            reading_time: reading_time.parse().unwrap(),
+        })
+    }
+}
+
+#[derive(Debug, sqlx::FromRow)]
+pub struct SensorWithValue {
+    id: i64,
+    name: String,
+    mac_address: String,
+    #[sqlx(flatten)]
+    value: SensorValue,
 }
