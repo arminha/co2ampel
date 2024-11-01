@@ -105,7 +105,7 @@ pub async fn get_sensors_with_last_value(
     Ok(sensors)
 }
 
-#[derive(Debug)]
+#[derive(Debug, serde::Serialize)]
 pub struct SensorValue {
     pub co2: f32,
     pub temperature: f32,
@@ -127,7 +127,7 @@ impl FromRow<'_, SqliteRow> for SensorValue {
     }
 }
 
-#[derive(Debug, sqlx::FromRow)]
+#[derive(Debug, sqlx::FromRow, serde::Serialize)]
 pub struct SensorWithValue {
     id: i64,
     name: String,

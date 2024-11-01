@@ -211,6 +211,7 @@ dependencies = [
  "axum",
  "dotenvy",
  "jiff",
+ "minijinja",
  "serde",
  "sqlx",
  "tokio",
@@ -782,6 +783,15 @@ name = "mime"
 version = "0.3.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6877bb514081ee2a7ff5ef9de3281f14a4dd4bceac4c09388074a6b5df8a139a"
+
+[[package]]
+name = "minijinja"
+version = "2.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c9ca8daf4b0b4029777f1bc6e1aedd1aec7b74c276a43bc6f620a8e1a1c0a90e"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "minimal-lexical"

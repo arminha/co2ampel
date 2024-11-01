@@ -5,11 +5,21 @@ use axum::response::Html;
 use axum::{extract::Query, routing::get, Router};
 use db::{Database, SensorValue};
 use jiff::{RoundMode, Timestamp, TimestampRound, Unit};
+use minijinja::{context, Environment};
 use serde::Deserialize;
 use std::env;
+use std::sync::Arc;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 mod db;
+
+const INDEX_TT: &str = include_str!("assets/index.html");
+
+#[derive(Clone)]
+struct AppState {
+    database: Database,
+    env: Arc<Environment<'static>>,
+}
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -26,10 +36,14 @@ async fn main() -> anyhow::Result<()> {
     let database = setup_database().await?;
     database.run_migrations().await?;
 
+    let mut env = Environment::new();
+    env.add_template("index.html", INDEX_TT).unwrap();
+    let env = Arc::new(env);
+
     let app = Router::new()
         .route("/co2-ampel", get(receive_sensor_values))
         .route("/", get(index))
-        .with_state(database);
+        .with_state(AppState { database, env });
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
         .await
@@ -60,12 +74,12 @@ struct Params {
 }
 
 async fn receive_sensor_values(
-    State(database): State<Database>,
+    State(app_state): State<AppState>,
     Query(params): Query<Params>,
 ) -> &'static str {
     tracing::debug!("data received: {params:?}");
     let now = current_time_millis();
-    let mut conn = database.get_connection().await.unwrap();
+    let mut conn = app_state.database.get_connection().await.unwrap();
     let sensor_id: Option<i64> = db::find_sensor_id(&mut *conn, &params.id).await.unwrap();
     let sensor_id = if let Some(id) = sensor_id {
         id
@@ -88,10 +102,16 @@ async fn receive_sensor_values(
     "done"
 }
 
-async fn index(State(database): State<Database>) -> Html<String> {
-    let mut conn = database.get_connection().await.unwrap();
+async fn index(State(app_state): State<AppState>) -> Html<String> {
+    let mut conn = app_state.database.get_connection().await.unwrap();
     let sensors = db::get_sensors_with_last_value(&mut *conn).await.unwrap();
-    Html(format!("<html><h1>Hello</h1><p>{sensors:?}</html>"))
+    let template = app_state.env.get_template("index.html").unwrap();
+    let html = template
+        .render(context! {
+            sensors => sensors,
+        })
+        .unwrap();
+    Html(html)
 }
 
 fn current_time_millis() -> Timestamp {
