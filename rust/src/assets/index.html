@@ -1,41 +1,105 @@
 <!doctype html>
-<html lang="en">
 
 <head>
-    <title>CO2-Ampel Dashboard</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="utf-8">
-    <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>CO2-Ampel Backend</title>
+    <meta name="apple-mobile-web-app-title" content="CO2-Ampel">
+    <link href="css/style.css" rel="stylesheet" type="text/css">
+    <link href="css/bootstrap-4.3.1.css" rel="stylesheet" type="text/css">
 </head>
 
-<script>
-    setTimeout(function () {
-        window.location.reload(1);
-    }, 10000);
-</script>
-
 <body>
-    <div class="container centered">
-        <h1 class="text-center" style="margin-top: 5%;">CO2-Ampel Dashboard</h1>
-        <div class="columns" style="margin-left: 15%; margin-right: 15%;">
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow">
+        <a class="navbar-brand" href=""><i class="far fa-chart-bar math-red"></i> CO2-Ampel Dashboard</a>
+    </nav>
+
+    <div class="container mt-3">
+        <!-- dashboard tiles -->
+        <div class="container-fluid">
+            <h1 class="display-4 text-secondary mb-2">CO2 - Ampeln</h1>
             {% for sensor in sensors %}
-            <div class="column col-4 text-center">
-                <div class="card mt-2">
-                    <div class="card-header bg-gray">
-                        <div class="card-title">
-                            <h5>{{ sensor.name }}</h5> {{ sensor.value.reading_time }}
-                        </div>
-                    </div>
+            <div class="container quote">
+                <blockquote class=" blockquote my-4">
+                    <p class="mb-0 text-secondary"><a href="#"><strong>{{ sensor.name }}</strong></a>
+                        <cite title="Source Title"> -
+                            {{ sensor.value.reading_time }} -
+                            {{ sensor.mac_address }}
+                        </cite>
+                    </p>
+                </blockquote>
+            </div>
+            <!-- Draw the card deck -->
+            <div class="card-deck">
+                <div class="card text-secondary bg-dark mb-3 shadow">
+
                     <div class="card-body">
-                        <p>CO2: <span>{{ sensor.value.co2 }} ppm</span></p>
-                        <p>Temperature: <span>{{ sensor.value.temperature | round(1) }} °C</span></p>
-                        <p>Humidity: <span>{{ sensor.value.humidity | round(1) }} %</span></p>
-                        <p>Brightness: <span>{{ sensor.value.lumen }}</span></p>
+                        <h5 class="card-title">CO₂</h5>
+                        <!--print reading here-->
+                        <h1 class="card-title text-success">
+                            {{ sensor.value.co2 }} ppm
+                        </h1>
+                        <p class="card-text">
+
+                        </p>
                     </div>
                 </div>
-            </div> 
-            {%  endfor %}
+
+                <div class="card text-secondary bg-dark mb-3 shadow">
+
+                    <div class="card-body">
+                        <h5 class="card-title">Temperatur</h5>
+                        <!--print reading here-->
+                        <h1 class="card-title text-primary">
+                            {{ sensor.value.temperature | round(1) }}°C
+                        </h1>
+                        <!-- <h2 class="card-title text-primary">millibar</h2> -->
+                        <p class="card-text">
+
+                        </p>
+                    </div>
+                </div>
+
+                <div class="card text-secondary bg-dark mb-3 shadow ">
+
+                    <div class="card-body">
+                        <h5 class="card-title">Luftfeuchtigkeit</h5>
+                        <!--print reading here-->
+                        <h1 class="card-title text-info">
+                            {{ sensor.value.humidity | round(1) }} %
+                        </h1>
+                        <p class="card-text">
+
+                        </p>
+                    </div>
+                </div>
+
+                <div class="card text-secondary bg-dark mb-3 shadow">
+
+                    <div class="card-body">
+                        <h5 class="card-title">Lichtstärke</h5>
+                        <!--print reading here-->
+                        <h1 class="card-title text-warning">
+                            {{ sensor.value.lumen }} Ω
+                        </h1>
+                        <p class="card-text">
+
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="container quote">
+            <blockquote class=" blockquote my-4">
+                <p class="mb-0 text-secondary">Neue Ampeln</p>
+                <footer class="blockquote-footer"> <cite title="Source Title">Bitte zuweisen</cite>
+                </footer>
+            </blockquote>
         </div>
     </div>
-    <footer></footer>
+    <div class="container container-spacer"></div>
+    </div>
 </body>

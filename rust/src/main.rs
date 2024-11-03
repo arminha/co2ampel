@@ -1,7 +1,8 @@
 #![forbid(unsafe_code)]
 
 use axum::extract::State;
-use axum::response::Html;
+use axum::http::header;
+use axum::response::{Html, IntoResponse};
 use axum::{extract::Query, routing::get, Router};
 use db::{Database, SensorValue};
 use jiff::{RoundMode, Timestamp, TimestampRound, Unit};
@@ -14,6 +15,8 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 mod db;
 
 const INDEX_TT: &str = include_str!("assets/index.html");
+const STYLE_CSS: &str = include_str!("assets/css/style.css");
+const BOOTSTRAP_CSS: &str = include_str!("assets/css/bootstrap-4.3.1.css");
 
 #[derive(Clone)]
 struct AppState {
@@ -43,6 +46,8 @@ async fn main() -> anyhow::Result<()> {
     let app = Router::new()
         .route("/co2-ampel", get(receive_sensor_values))
         .route("/", get(index))
+        .route("/css/style.css", get(style_css))
+        .route("/css/bootstrap-4.3.1.css", get(bootstrap_css))
         .with_state(AppState { database, env });
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
@@ -112,6 +117,14 @@ async fn index(State(app_state): State<AppState>) -> Html<String> {
         })
         .unwrap();
     Html(html)
+}
+
+async fn style_css() -> impl IntoResponse {
+    ([(header::CONTENT_TYPE, "text/css")], STYLE_CSS)
+}
+
+async fn bootstrap_css() -> impl IntoResponse {
+    ([(header::CONTENT_TYPE, "text/css")], BOOTSTRAP_CSS)
 }
 
 fn current_time_millis() -> Timestamp {
