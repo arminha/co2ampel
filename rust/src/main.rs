@@ -89,7 +89,7 @@ async fn receive_sensor_values(
     let sensor_id = if let Some(id) = sensor_id {
         id
     } else {
-        db::insert_sensor(&mut *conn, &params.id, now)
+        db::insert_sensor(&mut conn, &params.id, now)
             .await
             .unwrap()
     };
