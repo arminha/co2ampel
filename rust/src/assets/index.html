@@ -1,18 +1,22 @@
 <!doctype html>
 
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta charset="utf-8" />
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
     <title>CO2-Ampel Backend</title>
-    <meta name="apple-mobile-web-app-title" content="CO2-Ampel">
-    <link href="css/style.css" rel="stylesheet" type="text/css">
-    <link href="css/bootstrap-4.3.1.css" rel="stylesheet" type="text/css">
+    <meta name="apple-mobile-web-app-title" content="CO2-Ampel" />
+    <link href="css/style.css" rel="stylesheet" type="text/css" />
+    <link href="css/bootstrap-4.3.1.css" rel="stylesheet" type="text/css" />
 </head>
 
 <body>
-
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow">
-        <a class="navbar-brand" href=""><i class="far fa-chart-bar math-red"></i> CO2-Ampel Dashboard</a>
+        <a class="navbar-brand" href=""
+            ><i class="far fa-chart-bar math-red"></i> CO2-Ampel Dashboard</a
+        >
     </nav>
 
     <div class="container mt-3">
@@ -21,11 +25,12 @@
             <h1 class="display-4 text-secondary mb-2">CO2 - Ampeln</h1>
             {% for sensor in sensors %}
             <div class="container quote">
-                <blockquote class=" blockquote my-4">
-                    <p class="mb-0 text-secondary"><a href="#"><strong>{{ sensor.name }}</strong></a>
-                        <cite title="Source Title"> -
-                            {{ sensor.value.reading_time }} -
-                            {{ sensor.mac_address }}
+                <blockquote class="blockquote my-4">
+                    <p class="mb-0 text-secondary">
+                        <a href="#"><strong>{{ sensor.name }}</strong></a>
+                        <cite title="Source Title">
+                            - {{ sensor.value.reading_time }} - {{
+                            sensor.mac_address }}
                         </cite>
                     </p>
                 </blockquote>
@@ -33,21 +38,17 @@
             <!-- Draw the card deck -->
             <div class="card-deck">
                 <div class="card text-secondary bg-dark mb-3 shadow">
-
                     <div class="card-body">
                         <h5 class="card-title">CO₂</h5>
                         <!--print reading here-->
                         <h1 class="card-title text-success">
                             {{ sensor.value.co2 }} ppm
                         </h1>
-                        <p class="card-text">
-
-                        </p>
+                        <p class="card-text"></p>
                     </div>
                 </div>
 
                 <div class="card text-secondary bg-dark mb-3 shadow">
-
                     <div class="card-body">
                         <h5 class="card-title">Temperatur</h5>
                         <!--print reading here-->
@@ -55,51 +56,34 @@
                             {{ sensor.value.temperature | round(1) }}°C
                         </h1>
                         <!-- <h2 class="card-title text-primary">millibar</h2> -->
-                        <p class="card-text">
-
-                        </p>
+                        <p class="card-text"></p>
                     </div>
                 </div>
 
-                <div class="card text-secondary bg-dark mb-3 shadow ">
-
+                <div class="card text-secondary bg-dark mb-3 shadow">
                     <div class="card-body">
                         <h5 class="card-title">Luftfeuchtigkeit</h5>
                         <!--print reading here-->
                         <h1 class="card-title text-info">
                             {{ sensor.value.humidity | round(1) }} %
                         </h1>
-                        <p class="card-text">
-
-                        </p>
+                        <p class="card-text"></p>
                     </div>
                 </div>
 
                 <div class="card text-secondary bg-dark mb-3 shadow">
-
                     <div class="card-body">
                         <h5 class="card-title">Lichtstärke</h5>
                         <!--print reading here-->
                         <h1 class="card-title text-warning">
                             {{ sensor.value.lumen }} Ω
                         </h1>
-                        <p class="card-text">
-
-                        </p>
+                        <p class="card-text"></p>
                     </div>
                 </div>
             </div>
             {% endfor %}
         </div>
-
-        <div class="container quote">
-            <blockquote class=" blockquote my-4">
-                <p class="mb-0 text-secondary">Neue Ampeln</p>
-                <footer class="blockquote-footer"> <cite title="Source Title">Bitte zuweisen</cite>
-                </footer>
-            </blockquote>
-        </div>
     </div>
     <div class="container container-spacer"></div>
-    </div>
 </body>
