@@ -85,7 +85,7 @@ async fn receive_sensor_values(
     tracing::debug!("data received: {params:?}");
     let now = current_time_millis();
     let mut conn = app_state.database.get_connection().await.unwrap();
-    let sensor_id: Option<i64> = db::find_sensor_id(&mut *conn, &params.id).await.unwrap();
+    let sensor_id: Option<i64> = db::find_sensor_id(&mut conn, &params.id).await.unwrap();
     let sensor_id = if let Some(id) = sensor_id {
         id
     } else {
@@ -100,7 +100,7 @@ async fn receive_sensor_values(
         lumen: params.lumen,
         reading_time: now,
     };
-    db::insert_sensor_value(&mut *conn, sensor_id, value)
+    db::insert_sensor_value(&mut conn, sensor_id, value)
         .await
         .unwrap();
     tracing::debug!("sensor ID: {sensor_id}");
@@ -109,7 +109,7 @@ async fn receive_sensor_values(
 
 async fn index(State(app_state): State<AppState>) -> Html<String> {
     let mut conn = app_state.database.get_connection().await.unwrap();
-    let sensors = db::get_sensors_with_last_value(&mut *conn).await.unwrap();
+    let sensors = db::get_sensors_with_last_value(&mut conn).await.unwrap();
     let template = app_state.env.get_template("index.html").unwrap();
     let html = template
         .render(context! {
