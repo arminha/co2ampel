@@ -1,0 +1,12 @@
+Source: co2ampel-backend
+Section: misc
+Priority: optional
+Maintainer: Armin Häberling <armin.aha@gmail.com>
+Build-Depends: debhelper-compat (= 13), pkg-config, libssl-dev, libsqlite3-dev
+Standards-Version: 3.9.5
+Homepage: https://github.com/arminha/co2ampel
+
+Package: co2ampel-backend
+Architecture: any
+Depends: adduser, ${shlibs:Depends}, ${misc:Depends}
+Description: Rust Backend for the CO2-Ampel

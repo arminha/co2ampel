@@ -1,0 +1,7 @@
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: co2ampel-backend
+Source: https://github.com/arminha/co2ampel
+
+Files: *
+Copyright: 2024 Armin Häberling <armin.aha@gmail.com>
+License: MIT
