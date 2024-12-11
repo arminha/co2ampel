@@ -4,13 +4,13 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-anyhow = "1.0.93"
+anyhow = "1.0.94"
 axum = "0.7.9"
 dotenvy = "0.15.7"
-jiff = { version = "0.1.14", features = ["serde"] }
+jiff = { version = "0.1.15", features = ["serde"] }
 minijinja = "2.5.0"
-serde = { version = "1.0.215", features = ["derive"] }
+serde = { version = "1.0.216", features = ["derive"] }
 sqlx = { version = "0.8.2", features = ["runtime-tokio", "sqlite"] }
-tokio = { version = "1.41.1", features = ["rt-multi-thread", "macros"] }
-tracing = "0.1.40"
-tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+tokio = { version = "1.42.0", features = ["rt-multi-thread", "macros"] }
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
