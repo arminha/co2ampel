@@ -1,22 +1,33 @@
 #![forbid(unsafe_code)]
 
-use axum::extract::State;
-use axum::http::header;
-use axum::response::{Html, IntoResponse};
-use axum::{extract::Query, routing::get, Router};
+use axum::{
+    extract::{Query, State},
+    http::HeaderMap,
+    response::{Html, IntoResponse},
+    routing::get,
+    Router,
+};
 use db::{Database, SensorValue};
+use headers::HeaderMapExt;
 use jiff::{RoundMode, Timestamp, TimestampRound, Unit};
 use minijinja::{context, Environment};
 use serde::Deserialize;
-use std::env;
-use std::sync::Arc;
+use static_content::StaticContent;
+use std::{
+    env,
+    sync::{Arc, LazyLock},
+};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 mod db;
+mod static_content;
 
 const INDEX_TT: &str = include_str!("assets/index.html");
-const STYLE_CSS: &str = include_str!("assets/css/style.css");
-const BOOTSTRAP_CSS: &str = include_str!("assets/css/bootstrap-4.3.1.css");
+const TEXT_CSS: &str = "text/css";
+static STYLE_CSS: LazyLock<StaticContent> =
+    LazyLock::new(|| StaticContent::new(include_str!("assets/css/style.css"), TEXT_CSS));
+static BOOTSTRAP_CSS: LazyLock<StaticContent> =
+    LazyLock::new(|| StaticContent::new(include_str!("assets/css/bootstrap-4.3.1.css"), TEXT_CSS));
 
 #[derive(Clone)]
 struct AppState {
@@ -89,9 +100,7 @@ async fn receive_sensor_values(
     let sensor_id = if let Some(id) = sensor_id {
         id
     } else {
-        db::insert_sensor(&mut conn, &params.id, now)
-            .await
-            .unwrap()
+        db::insert_sensor(&mut conn, &params.id, now).await.unwrap()
     };
     let value = SensorValue {
         co2: params.co2,
@@ -119,12 +128,12 @@ async fn index(State(app_state): State<AppState>) -> Html<String> {
     Html(html)
 }
 
-async fn style_css() -> impl IntoResponse {
-    ([(header::CONTENT_TYPE, "text/css")], STYLE_CSS)
+async fn style_css(headers: HeaderMap) -> impl IntoResponse {
+    STYLE_CSS.get_request(headers.typed_get())
 }
 
-async fn bootstrap_css() -> impl IntoResponse {
-    ([(header::CONTENT_TYPE, "text/css")], BOOTSTRAP_CSS)
+async fn bootstrap_css(headers: HeaderMap) -> impl IntoResponse {
+    BOOTSTRAP_CSS.get_request(headers.typed_get())
 }
 
 fn current_time_millis() -> Timestamp {
