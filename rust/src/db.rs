@@ -105,6 +105,38 @@ pub async fn get_sensors_with_last_value(
     Ok(sensors)
 }
 
+pub async fn get_sensor_with_last_values(
+    conn: &mut SqliteConnection,
+    id: i64,
+    max_values: u32,
+) -> anyhow::Result<Option<SensorWithValues>> {
+    let mut sensor_values: Vec<SensorWithValue> = sqlx::query_as(r#"
+        SELECT s.id, s.name, s.mac_address, v.co2, v.temperature, v.humidity, v.lumen, v.reading_time
+        FROM sensor s
+        JOIN sensor_data v on (s.id = v.sensor_id)
+        WHERE s.id = $1
+        ORDER by v.reading_time desc
+        LIMIT $2
+    "#)
+    .bind(id)
+    .bind(max_values)
+    .fetch_all(conn)
+    .await?;
+    if sensor_values.is_empty() {
+        return Ok(None);
+    }
+    let last_value = sensor_values.remove(sensor_values.len() - 1);
+    let mut values: Vec<_> = sensor_values.into_iter().map(|v| v.value).collect();
+    values.push(last_value.value);
+    let result = SensorWithValues {
+        id: last_value.id,
+        name: last_value.name,
+        mac_address: last_value.mac_address,
+        values,
+    };
+    Ok(Some(result))
+}
+
 #[derive(Debug, serde::Serialize)]
 pub struct SensorValue {
     pub co2: f32,
@@ -134,4 +166,12 @@ pub struct SensorWithValue {
     mac_address: String,
     #[sqlx(flatten)]
     value: SensorValue,
+}
+
+#[derive(Debug, serde::Serialize)]
+pub struct SensorWithValues {
+    id: i64,
+    name: String,
+    mac_address: String,
+    values: Vec<SensorValue>,
 }

@@ -1,8 +1,8 @@
 #![forbid(unsafe_code)]
 
 use axum::{
-    extract::{Query, State},
-    http::HeaderMap,
+    extract::{Path, Query, State},
+    http::{HeaderMap, StatusCode},
     response::{Html, IntoResponse},
     routing::get,
     Router,
@@ -23,6 +23,7 @@ mod db;
 mod static_content;
 
 const INDEX_TT: &str = include_str!("assets/index.html");
+const SENSOR_TT: &str = include_str!("assets/sensor.html");
 const TEXT_CSS: &str = "text/css";
 static STYLE_CSS: LazyLock<StaticContent> =
     LazyLock::new(|| StaticContent::new(include_str!("assets/css/style.css"), TEXT_CSS));
@@ -52,11 +53,13 @@ async fn main() -> anyhow::Result<()> {
 
     let mut env = Environment::new();
     env.add_template("index.html", INDEX_TT).unwrap();
+    env.add_template("sensor.html", SENSOR_TT).unwrap();
     let env = Arc::new(env);
 
     let app = Router::new()
         .route("/co2-ampel", get(receive_sensor_values))
         .route("/", get(index))
+        .route("/sensor/{id}", get(sensor_detail))
         .route("/css/style.css", get(style_css))
         .route("/css/bootstrap-4.3.1.css", get(bootstrap_css))
         .with_state(AppState { database, env });
@@ -126,6 +129,27 @@ async fn index(State(app_state): State<AppState>) -> Html<String> {
         })
         .unwrap();
     Html(html)
+}
+
+async fn sensor_detail(
+    State(app_state): State<AppState>,
+    Path(id): Path<i64>,
+) -> Result<Html<String>, StatusCode> {
+    let mut conn = app_state.database.get_connection().await.unwrap();
+    let sensor = db::get_sensor_with_last_values(&mut conn, id, 6 * 12)
+        .await
+        .unwrap();
+    let sensor = match sensor {
+        None => return Err(StatusCode::NOT_FOUND),
+        Some(sensor) => sensor,
+    };
+    let template = app_state.env.get_template("sensor.html").unwrap();
+    let html = template
+        .render(context! {
+            sensor => sensor
+        })
+        .unwrap();
+    Ok(Html(html))
 }
 
 async fn style_css(headers: HeaderMap) -> impl IntoResponse {

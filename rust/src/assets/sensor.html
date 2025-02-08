@@ -8,29 +8,27 @@
         />
         <title>CO2-Ampel Backend</title>
         <meta name="apple-mobile-web-app-title" content="CO2-Ampel" />
-        <link href="css/style.css" rel="stylesheet" type="text/css" />
-        <link href="css/bootstrap-4.3.1.css" rel="stylesheet" type="text/css" />
+        <link href="../css/style.css" rel="stylesheet" type="text/css" />
+        <link
+            href="../css/bootstrap-4.3.1.css"
+            rel="stylesheet"
+            type="text/css"
+        />
     </head>
 
     <body>
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow">
-            <a class="navbar-brand" href="">CO2-Ampel Dashboard</a>
+            <a class="navbar-brand" href="../">CO2-Ampel Dashboard</a>
         </nav>
-
         <div class="container mt-3">
-            <!-- dashboard tiles -->
             <div class="container-fluid">
-                <h1 class="display-4 text-secondary mb-2">CO2 - Ampeln</h1>
-                {% for sensor in sensors %}
+                <h1 class="display-4 text-secondary mb-2">{{ sensor.name }}</h1>
                 <div class="container quote">
                     <blockquote class="blockquote my-4">
                         <p class="mb-0 text-secondary">
-                            <a href="sensor/{{ sensor.id }}">
-                                <strong>{{ sensor.name }}</strong>
-                            </a>
-                            <cite title="Source Title">
-                                - {{ sensor.value.reading_time }} - {{
-                                sensor.mac_address }}
+                            <cite title="Source Title"
+                                >{{ sensor.values[0].reading_time }} -
+                                {{sensor.mac_address }}
                             </cite>
                         </p>
                     </blockquote>
@@ -42,7 +40,7 @@
                             <h5 class="card-title">CO₂</h5>
                             <!--print reading here-->
                             <h1 class="card-title text-success">
-                                {{ sensor.value.co2 }} ppm
+                                {{ sensor.values[0].co2 }} ppm
                             </h1>
                             <p class="card-text"></p>
                         </div>
@@ -53,7 +51,7 @@
                             <h5 class="card-title">Temperatur</h5>
                             <!--print reading here-->
                             <h1 class="card-title text-primary">
-                                {{ sensor.value.temperature | round(1) }}°C
+                                {{ sensor.values[0].temperature | round(1) }}°C
                             </h1>
                             <!-- <h2 class="card-title text-primary">millibar</h2> -->
                             <p class="card-text"></p>
@@ -65,7 +63,7 @@
                             <h5 class="card-title">Luftfeuchtigkeit</h5>
                             <!--print reading here-->
                             <h1 class="card-title text-info">
-                                {{ sensor.value.humidity | round(1) }} %
+                                {{ sensor.values[0].humidity | round(1) }} %
                             </h1>
                             <p class="card-text"></p>
                         </div>
@@ -76,15 +74,33 @@
                             <h5 class="card-title">Lichtstärke</h5>
                             <!--print reading here-->
                             <h1 class="card-title text-warning">
-                                {{ sensor.value.lumen }} Ω
+                                {{ sensor.values[0].lumen }} Ω
                             </h1>
                             <p class="card-text"></p>
                         </div>
                     </div>
                 </div>
-                {% endfor %}
+                <table class="table table-dark">
+                    <thead>
+                        <tr>
+                            <th>Zeit</th>
+                            <th>CO₂</th>
+                            <th>Temperatur</th>
+                            <th>Luftfeuchtigkeit</th>
+                            <th>Lichtstärke</th>
+                        </tr>
+                    </thead>
+                    {% for value in sensor.values %}
+                    <tr>
+                        <td>{{ value.reading_time }}</td>
+                        <td>{{ value.co2 }} ppm</td>
+                        <td>{{ value.temperature | round(1) }}°C</td>
+                        <td>{{ value.humidity | round(1) }} %</td>
+                        <td>{{ value.lumen }} Ω</td>
+                    </tr>
+                    {% endfor %}
+                </table>
             </div>
         </div>
-        <div class="container container-spacer"></div>
     </body>
 </html>
