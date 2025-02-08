@@ -31,7 +31,7 @@ impl StaticContent {
     // Handle a GET request with ETag logic
     pub fn get_request(&self, if_none_match: Option<IfNoneMatch>) -> Response<Body> {
         if let Some(if_none_match) = if_none_match {
-            tracing::debug!("IfNoneMatch found: {:?}", &if_none_match);
+            tracing::trace!("IfNoneMatch found: {:?}", &if_none_match);
             if !if_none_match.precondition_passes(&self.etag) {
                 let mut res = Response::new(Body::empty());
                 *res.status_mut() = StatusCode::NOT_MODIFIED;
