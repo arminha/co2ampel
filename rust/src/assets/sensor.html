@@ -40,7 +40,7 @@
                             <h5 class="card-title">CO₂</h5>
                             <!--print reading here-->
                             <h1 class="card-title text-success">
-                                {{ sensor.values[0].co2 }} ppm
+                                {{ sensor.values[0].co2 | int }} ppm
                             </h1>
                             <p class="card-text"></p>
                         </div>
@@ -74,7 +74,7 @@
                             <h5 class="card-title">Lichtstärke</h5>
                             <!--print reading here-->
                             <h1 class="card-title text-warning">
-                                {{ sensor.values[0].lumen }} Ω
+                                {{ sensor.values[0].lumen | int }} Ω
                             </h1>
                             <p class="card-text"></p>
                         </div>
@@ -84,19 +84,19 @@
                     <thead>
                         <tr>
                             <th>Zeit</th>
-                            <th>CO₂</th>
-                            <th>Temperatur</th>
-                            <th>Luftfeuchtigkeit</th>
-                            <th>Lichtstärke</th>
+                            <th>CO₂ (ppm)</th>
+                            <th>Temperatur (°C)</th>
+                            <th>Luftfeuchtigkeit (%)</th>
+                            <th>Lichtstärke (Ω)</th>
                         </tr>
                     </thead>
                     {% for value in sensor.values %}
                     <tr>
                         <td>{{ value.reading_time }}</td>
-                        <td>{{ value.co2 }} ppm</td>
-                        <td>{{ value.temperature | round(1) }}°C</td>
-                        <td>{{ value.humidity | round(1) }} %</td>
-                        <td>{{ value.lumen }} Ω</td>
+                        <td>{{ value.co2 | int }}</td>
+                        <td>{{ value.temperature | round(1) }}</td>
+                        <td>{{ value.humidity | round(1) }}</td>
+                        <td>{{ value.lumen | int }}</td>
                     </tr>
                     {% endfor %}
                 </table>

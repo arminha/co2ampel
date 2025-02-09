@@ -42,7 +42,7 @@
                             <h5 class="card-title">CO₂</h5>
                             <!--print reading here-->
                             <h1 class="card-title text-success">
-                                {{ sensor.value.co2 }} ppm
+                                {{ sensor.value.co2 | int }} ppm
                             </h1>
                             <p class="card-text"></p>
                         </div>
@@ -76,7 +76,7 @@
                             <h5 class="card-title">Lichtstärke</h5>
                             <!--print reading here-->
                             <h1 class="card-title text-warning">
-                                {{ sensor.value.lumen }} Ω
+                                {{ sensor.value.lumen | int }} Ω
                             </h1>
                             <p class="card-text"></p>
                         </div>
