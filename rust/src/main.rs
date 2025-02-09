@@ -9,7 +9,7 @@ use axum::{
 };
 use db::{Database, SensorValue};
 use headers::HeaderMapExt;
-use jiff::{RoundMode, Timestamp, TimestampRound, Unit};
+use jiff::{tz::TimeZone, RoundMode, Timestamp, TimestampRound, Unit};
 use minijinja::{context, Environment};
 use serde::Deserialize;
 use static_content::StaticContent;
@@ -54,6 +54,7 @@ async fn main() -> anyhow::Result<()> {
     let mut env = Environment::new();
     env.add_template("index.html", INDEX_TT).unwrap();
     env.add_template("sensor.html", SENSOR_TT).unwrap();
+    env.add_filter("datetime", format_timestamp);
     let env = Arc::new(env);
 
     let app = Router::new()
@@ -70,6 +71,15 @@ async fn main() -> anyhow::Result<()> {
     tracing::debug!("listening on {}", listener.local_addr().unwrap());
     axum::serve(listener, app).await?;
     Ok(())
+}
+
+fn format_timestamp(value: String) -> String {
+    let timestamp: Timestamp = value.parse().unwrap();
+    let zoned = timestamp
+        .to_zoned(TimeZone::system())
+        .round(Unit::Second)
+        .unwrap();
+    zoned.strftime("%H:%M:%S %d.%m.%Y").to_string()
 }
 
 async fn setup_database() -> anyhow::Result<Database> {

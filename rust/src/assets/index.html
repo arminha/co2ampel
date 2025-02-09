@@ -29,7 +29,7 @@
                                 ><strong>{{ sensor.name }}</strong></a
                             >
                             <cite title="Source Title"
-                                >- {{ sensor.value.reading_time }} -
+                                >- {{ sensor.value.reading_time | datetime }} -
                                 {{sensor.mac_address }}</cite
                             >
                         </p>

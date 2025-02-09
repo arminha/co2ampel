@@ -27,8 +27,8 @@
                     <blockquote class="blockquote my-4">
                         <p class="mb-0 text-secondary">
                             <cite title="Source Title"
-                                >{{ sensor.values[0].reading_time }} -
-                                {{sensor.mac_address }}
+                                >{{ sensor.values[0].reading_time | datetime }}
+                                - {{sensor.mac_address }}
                             </cite>
                         </p>
                     </blockquote>
@@ -92,7 +92,7 @@
                     </thead>
                     {% for value in sensor.values %}
                     <tr>
-                        <td>{{ value.reading_time }}</td>
+                        <td>{{ value.reading_time | datetime }}</td>
                         <td>{{ value.co2 | int }}</td>
                         <td>{{ value.temperature | round(1) }}</td>
                         <td>{{ value.humidity | round(1) }}</td>
