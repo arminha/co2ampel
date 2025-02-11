@@ -9,7 +9,7 @@ use axum::{
 };
 use db::{Database, SensorValue};
 use headers::HeaderMapExt;
-use jiff::{tz::TimeZone, RoundMode, Timestamp, TimestampRound, Unit};
+use jiff::{tz::TimeZone, RoundMode, Timestamp, TimestampRound, ToSpan, Unit};
 use minijinja::{context, Environment};
 use serde::Deserialize;
 use static_content::StaticContent;
@@ -144,17 +144,25 @@ async fn sensor_detail(
     Path(id): Path<i64>,
 ) -> Result<Html<String>, StatusCode> {
     let mut conn = app_state.database.get_connection().await.unwrap();
-    let sensor = db::get_sensor_with_last_values(&mut conn, id, 6 * 12)
-        .await
-        .unwrap();
+    let sensor = db::get_sensor_with_last_value(&mut conn, id).await.unwrap();
     let sensor = match sensor {
         None => return Err(StatusCode::NOT_FOUND),
         Some(sensor) => sensor,
     };
+    let values = db::get_sensor_values(
+        &mut conn,
+        id,
+        sensor.value.reading_time - 24.hours(),
+        sensor.value.reading_time,
+    )
+    .await
+    .unwrap();
+
     let template = app_state.env.get_template("sensor.html").unwrap();
     let html = template
         .render(context! {
-            sensor => sensor
+            sensor => sensor,
+            values => values
         })
         .unwrap();
     Ok(Html(html))

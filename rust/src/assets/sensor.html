@@ -27,8 +27,8 @@
                     <blockquote class="blockquote my-4">
                         <p class="mb-0 text-secondary">
                             <cite title="Source Title"
-                                >{{ sensor.values[0].reading_time | datetime }}
-                                - {{sensor.mac_address }}
+                                >{{ sensor.value.reading_time | datetime }} -
+                                {{sensor.mac_address }}
                             </cite>
                         </p>
                     </blockquote>
@@ -40,7 +40,7 @@
                             <h5 class="card-title">CO₂</h5>
                             <!--print reading here-->
                             <h1 class="card-title text-success">
-                                {{ sensor.values[0].co2 | int }} ppm
+                                {{ sensor.value.co2 | int }} ppm
                             </h1>
                             <p class="card-text"></p>
                         </div>
@@ -51,7 +51,7 @@
                             <h5 class="card-title">Temperatur</h5>
                             <!--print reading here-->
                             <h1 class="card-title text-primary">
-                                {{ sensor.values[0].temperature | round(1) }}°C
+                                {{ sensor.value.temperature | round(1) }}°C
                             </h1>
                             <!-- <h2 class="card-title text-primary">millibar</h2> -->
                             <p class="card-text"></p>
@@ -63,7 +63,7 @@
                             <h5 class="card-title">Luftfeuchtigkeit</h5>
                             <!--print reading here-->
                             <h1 class="card-title text-info">
-                                {{ sensor.values[0].humidity | round(1) }} %
+                                {{ sensor.value.humidity | round(1) }} %
                             </h1>
                             <p class="card-text"></p>
                         </div>
@@ -74,7 +74,7 @@
                             <h5 class="card-title">Lichtstärke</h5>
                             <!--print reading here-->
                             <h1 class="card-title text-warning">
-                                {{ sensor.values[0].lumen | int }} Ω
+                                {{ sensor.value.lumen | int }} Ω
                             </h1>
                             <p class="card-text"></p>
                         </div>
@@ -90,7 +90,7 @@
                             <th>Lichtstärke (Ω)</th>
                         </tr>
                     </thead>
-                    {% for value in sensor.values %}
+                    {% for value in values %}
                     <tr>
                         <td>{{ value.reading_time | datetime }}</td>
                         <td>{{ value.co2 | int }}</td>

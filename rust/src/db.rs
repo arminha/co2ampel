@@ -105,36 +105,45 @@ pub async fn get_sensors_with_last_value(
     Ok(sensors)
 }
 
-pub async fn get_sensor_with_last_values(
+pub async fn get_sensor_with_last_value(
     conn: &mut SqliteConnection,
     id: i64,
-    max_values: u32,
-) -> anyhow::Result<Option<SensorWithValues>> {
-    let mut sensor_values: Vec<SensorWithValue> = sqlx::query_as(r#"
+) -> anyhow::Result<Option<SensorWithValue>> {
+    let sensor = sqlx::query_as(r#"
         SELECT s.id, s.name, s.mac_address, v.co2, v.temperature, v.humidity, v.lumen, v.reading_time
         FROM sensor s
         JOIN sensor_data v on (s.id = v.sensor_id)
-        WHERE s.id = $1
-        ORDER by v.reading_time desc
-        LIMIT $2
+        WHERE v.reading_time = (SELECT max(d.reading_time) FROM sensor_data d WHERE d.sensor_id = s.id)
+        AND s.id = $1
+        ORDER by s.name
     "#)
     .bind(id)
-    .bind(max_values)
+    .fetch_optional(conn)
+    .await?;
+    Ok(sensor)
+}
+
+pub async fn get_sensor_values(
+    conn: &mut SqliteConnection,
+    id: i64,
+    from: Timestamp,
+    to: Timestamp,
+) -> anyhow::Result<Vec<SensorValue>> {
+    let values: Vec<SensorValue> = sqlx::query_as(
+        r#"
+            SELECT v.co2, v.temperature, v.humidity, v.lumen, v.reading_time
+            FROM sensor_data v
+            WHERE v.sensor_id = $1
+            AND v.reading_time >= $2 AND v.reading_time <= $3
+            ORDER by v.reading_time desc
+        "#,
+    )
+    .bind(id)
+    .bind(from.to_string())
+    .bind(to.to_string())
     .fetch_all(conn)
     .await?;
-    if sensor_values.is_empty() {
-        return Ok(None);
-    }
-    let last_value = sensor_values.remove(sensor_values.len() - 1);
-    let mut values: Vec<_> = sensor_values.into_iter().map(|v| v.value).collect();
-    values.push(last_value.value);
-    let result = SensorWithValues {
-        id: last_value.id,
-        name: last_value.name,
-        mac_address: last_value.mac_address,
-        values,
-    };
-    Ok(Some(result))
+    Ok(values)
 }
 
 #[derive(Debug, serde::Serialize)]
@@ -161,17 +170,9 @@ impl FromRow<'_, SqliteRow> for SensorValue {
 
 #[derive(Debug, sqlx::FromRow, serde::Serialize)]
 pub struct SensorWithValue {
-    id: i64,
-    name: String,
-    mac_address: String,
+    pub id: i64,
+    pub name: String,
+    pub mac_address: String,
     #[sqlx(flatten)]
-    value: SensorValue,
-}
-
-#[derive(Debug, serde::Serialize)]
-pub struct SensorWithValues {
-    id: i64,
-    name: String,
-    mac_address: String,
-    values: Vec<SensorValue>,
+    pub value: SensorValue,
 }
