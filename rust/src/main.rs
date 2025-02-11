@@ -52,8 +52,8 @@ async fn main() -> anyhow::Result<()> {
     database.run_migrations().await?;
 
     let mut env = Environment::new();
-    env.add_template("index.html", INDEX_TT).unwrap();
-    env.add_template("sensor.html", SENSOR_TT).unwrap();
+    env.add_template("index.html", INDEX_TT)?;
+    env.add_template("sensor.html", SENSOR_TT)?;
     env.add_filter("datetime", format_timestamp);
     let env = Arc::new(env);
 
@@ -65,10 +65,8 @@ async fn main() -> anyhow::Result<()> {
         .route("/css/bootstrap-4.3.1.css", get(bootstrap_css))
         .with_state(AppState { database, env });
 
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
-        .await
-        .unwrap();
-    tracing::debug!("listening on {}", listener.local_addr().unwrap());
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:3000").await?;
+    tracing::debug!("listening on {}", listener.local_addr()?);
     axum::serve(listener, app).await?;
     Ok(())
 }
