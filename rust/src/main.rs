@@ -9,7 +9,7 @@ use axum::{
 };
 use db::{Database, SensorValue};
 use headers::HeaderMapExt;
-use jiff::{tz::TimeZone, RoundMode, Timestamp, TimestampRound, ToSpan, Unit};
+use jiff::{civil::Date, tz::TimeZone, RoundMode, Timestamp, TimestampRound, ToSpan, Unit};
 use minijinja::{context, Environment};
 use serde::Deserialize;
 use static_content::StaticContent;
@@ -139,9 +139,15 @@ async fn index(State(app_state): State<AppState>) -> Html<String> {
     Html(html)
 }
 
+#[derive(Deserialize, Debug)]
+struct DetailParams {
+    date: Option<Date>,
+}
+
 async fn sensor_detail(
     State(app_state): State<AppState>,
     Path(id): Path<i64>,
+    Query(params): Query<DetailParams>,
 ) -> Result<Html<String>, StatusCode> {
     let mut conn = app_state.database.get_connection().await.unwrap();
     let sensor = db::get_sensor_with_last_value(&mut conn, id).await.unwrap();
@@ -149,20 +155,43 @@ async fn sensor_detail(
         None => return Err(StatusCode::NOT_FOUND),
         Some(sensor) => sensor,
     };
-    let values = db::get_sensor_values(
-        &mut conn,
-        id,
-        sensor.value.reading_time - 24.hours(),
-        sensor.value.reading_time,
-    )
-    .await
-    .unwrap();
+    let (from, to) = if let Some(date) = params.date {
+        let zoned = date.to_zoned(TimeZone::system()).unwrap();
+        (
+            zoned.start_of_day().unwrap().timestamp(),
+            zoned.end_of_day().unwrap().timestamp(),
+        )
+    } else {
+        (
+            sensor.value.reading_time - 24.hours(),
+            sensor.value.reading_time,
+        )
+    };
+    let values = db::get_sensor_values(&mut conn, id, from, to)
+        .await
+        .unwrap();
 
     let template = app_state.env.get_template("sensor.html").unwrap();
+    let (prev, next) = if let Some(date) = params.date {
+        (date.yesterday().unwrap(), Some(date.tomorrow().unwrap()))
+    } else {
+        (
+            sensor
+                .value
+                .reading_time
+                .to_zoned(TimeZone::system())
+                .date()
+                .yesterday()
+                .unwrap(),
+            None,
+        )
+    };
     let html = template
         .render(context! {
             sensor => sensor,
-            values => values
+            values => values,
+            prev => prev,
+            next => next,
         })
         .unwrap();
     Ok(Html(html))
